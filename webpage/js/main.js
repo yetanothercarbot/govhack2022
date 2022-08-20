@@ -107,7 +107,7 @@ function updateLayers() {
         }
         if (layers[i].get("name") == "flood") {
             layers[i].setVisible(showFlood);
-        } 
+        }
         if (layers[i].get("name") == "fire") {
             layers[i].setVisible(showFire);
         }
@@ -157,7 +157,7 @@ function setup() {
     M.AutoInit();
 
     setTimeout(mapSetup, 1000);
-    
+
     document.getElementById("update-map").addEventListener("pointerup", updateLayers);
 }
 
@@ -172,7 +172,7 @@ function mapSetup() {
         view: new View({
             center: [16305945.73750275, -2206013.7191165173],
             zoom: 6.1,
-            // minZoom: 6, 
+            // minZoom: 6,
             // extent: [15523987.351939877, -3234740.7746837423, 17196894.49780245, -1255714.7470971544],
             constrainOnlyCenter: true
         })
@@ -180,14 +180,14 @@ function mapSetup() {
     addKMLlayer("data/flood-extent.kml", "flood");
     addGeoJSONlayer("/data/roads.geojson", "roads", "EPSG:4326");
     // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
-    addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577");
+    //addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577");
     console.log(olProj.get("EPSG:9822"));
     /*
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
         document.getElementById("loader-overlay").style.display = "initial";
     });
-    */ 
+    */
     mapMain.on("loadend", function() {
         document.getElementById("loader-overlay").style.display = "none";
         var layers = mapMain.getAllLayers();
@@ -195,6 +195,52 @@ function mapSetup() {
             console.log(layers[i].get("name"));
         }
     });
+}
+
+function loadroads() {
+    // START OF EXTREMELY BAD TEMP CODE
+    mapMain.events.register("moveend", map, function() {
+        loadroads();
+    });
+    mapMain.events.register("zoomend", map, function() {
+        loadroads();
+    });
+
+    mapMain.getLayers().getArray()
+      .filter(layer => layer.get('name') === "roads")
+      .forEach(layer => mapMain.removeLayer(layer));
+
+    requestBody = {};
+    boundingBox = mapMain.getView().calculateExtent(mapMain.getSize());
+    requestBody.corner1 = ol.proj.toLonLat(boundingBox.slice(0,2));
+    requestBody.corner2 = ol.proj.toLonLat(boundingBox.slice(2,4))
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (xhttp.readyState == 4 && xhttp.status == 200) {
+            var data = JSON.parse(xhttp.responseText);
+            var vectorSource = new VectorSource({
+                features: new GeoJSON().readFeatures(data, {
+                    dataProjection: sourceProjection,
+                    featureProjection: defaultProj
+                }),
+            });
+
+            var newGeoJSONLayer = new VectorLayer({
+                source: vectorSource,
+                style: styleFunction,
+            });
+            newGeoJSONLayer.set("name", "roads");
+            mapMain.addLayer(newGeoJSONLayer);
+        } else if (xhttp.readyState == 4 && xhttp.status == 404) {
+            console.error("Received 404 whilst trying to fetch GeoJSON!");
+            // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
+        }
+    }
+    xhttp.open("POST", "http://localhost:9999/list_roads", true);
+    xhttp.send(JSON.stringify(requestBody));
+
+    // END OF EXTREMELY BAD TEMP CODE
 }
 
 setup();
