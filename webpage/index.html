@@ -12,10 +12,31 @@
     <title>Using OpenLayers with Vite</title>
   </head>
   <body>
+    <!-- Create sidebar with controls -->
+    <ul id="controls" class="sidenav sidenav-fixed">
+        <li><h3 class="center">Freight Route Planner</h3></li>
+        <li><h5 class="sidebar-checkbox">Diasasters to consider:</h5></li>
+        <li>
+            <label class="sidebar-checkbox">
+                <input type="checkbox" id="flooding-en" class="filled-in">
+                <span class="black-text">🌊 Flooding</span>
+            </label>
+        </li>
+        <li>
+            <label class="sidebar-checkbox">
+                <input type="checkbox" id="fire-en" class="filled-in">
+                <span class="black-text">🔥 Fires</span>
+            </label>
+        </li>
+        <li>
+            <li><a class="waves-effect green btn-large"><i class="material-icons right white-text">send</i><b>Apply</b></a></li>
+
+        </li>
+    </ul>
     <div id="map"></div>
 
-        <!-- Keep scripts at end of body so that they only load once the document has finished loading. -->
-        <script type="text/javascript" src="js/materialize.min.js"></script>
+    <!-- Keep scripts at end of body so that they only load once the document has finished loading. -->
+    <script type="text/javascript" src="js/materialize.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>
