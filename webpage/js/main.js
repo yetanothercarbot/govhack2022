@@ -8,10 +8,16 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Circle from 'ol/geom/Circle';
 import Feature from 'ol/Feature';
 import OSM from 'ol/source/OSM';
+import proj4 from 'proj4';
+import {register} from 'ol/proj/proj4';
 import * as olProj from 'ol/proj';
 
-
 var mapMain;
+const defaultProj = "EPSG:3857";
+
+proj4.defs("EPSG:3577","+proj=aea +lat_0=0 +lon_0=132 +lat_1=-18 +lat_2=-36 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=61.55,-10.87,-40.19,-39.4924,-32.7221,-32.8979,-9.99400000001316 +units=m +no_defs +type=crs");
+proj4.defs("EPSG:9822","+proj=lcc +lat_0=42 +lon_0=3 +lat_1=41.25 +lat_2=42.75 +x_0=1700000 +y_0=1200000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
+register(proj4);
 
 const image = new CircleStyle({
     radius: 5,
@@ -119,31 +125,18 @@ function addKMLlayer(url, layerName = "KML-Layer") {
     mapMain.addLayer(dataSource);
 }
 
-function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = "EPSG:3857") {
+function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = defaultProj) {
     // Fetch the GeoJSON data from the server
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (xhttp.readyState == 4 && xhttp.status == 200) {
             var data = JSON.parse(xhttp.responseText);
-            // Convert the projection in the GeoJSON file if needed
-            if (sourceProjection == "lonlat") { // TODO: Replace with proper projection method definition.
-                var n = 0;
-                for (var i = 0; i < data.features.length; i++) {
-                    for (var j = 0; j < data.features[i].geometry.coordinates.length; j++) {
-                        data.features[i].geometry.coordinates[j] = olProj.fromLonLat(data.features[i].geometry.coordinates[j]);
-                        n++;
-                    }
-                }
-                sourceProjection = "EPSG:3857"
-                console.log(n);
-            }
-
             var vectorSource = new VectorSource({
                 features: new GeoJSON().readFeatures(data, {
                     dataProjection: sourceProjection,
+                    featureProjection: defaultProj
                 }),
             });
-
 
             var newGeoJSONLayer = new VectorLayer({
                 source: vectorSource,
@@ -152,6 +145,7 @@ function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = "E
             newGeoJSONLayer.set("name", layerName);
             mapMain.addLayer(newGeoJSONLayer);
         } else if (xhttp.readyState == 4 && xhttp.status == 404) {
+            console.error("Received 404 whilst trying to fetch GeoJSON!");
             // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
         }
     }
@@ -162,8 +156,7 @@ function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = "E
 function setup() {
     M.AutoInit();
 
-    setTimeout(mapSetup, 3000);
-    
+    setTimeout(mapSetup, 1000);
     
     document.getElementById("update-map").addEventListener("pointerup", updateLayers);
 }
@@ -184,10 +177,11 @@ function mapSetup() {
             constrainOnlyCenter: true
         })
     });
-    // 
     addKMLlayer("data/flood-extent.kml", "flood");
-    addGeoJSONlayer("/data/roads.geojson", "roads", "lonlat"); 
-    addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "ESPG:9822"); // ESPG:9822
+    addGeoJSONlayer("/data/roads.geojson", "roads", "EPSG:4326");
+    // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
+    addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577");
+    console.log(olProj.get("EPSG:9822"));
     /*
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
