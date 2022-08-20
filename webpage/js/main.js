@@ -102,8 +102,7 @@ function parseData(data) {
   const vectorSource = new VectorSource({
     features: new GeoJSON().readFeatures(data),
   });
-  
-  vectorSource.addFeature(new Feature(new Circle([16305945.73750275, -2206013.7191165173], 1e3)));
+
 
   const roadsGeoJSONLayer = new VectorLayer({
     source: vectorSource,
@@ -121,8 +120,8 @@ function parseData(data) {
     view: new View({
       center: [16305945.73750275, -2206013.7191165173],
       zoom: 6.1,
-      minZoom: 6, 
-      extent: [15523987.351939877, -3234740.7746837423, 17196894.49780245, -1255714.7470971544],
+      // minZoom: 6, 
+      // extent: [15523987.351939877, -3234740.7746837423, 17196894.49780245, -1255714.7470971544],
       constrainOnlyCenter: true
     })
   });
@@ -142,6 +141,7 @@ function setup() {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (xhttp.readyState == 4 && xhttp.status == 200) {
+      document.getElementById("loader-overlay").style.display = "none";
       parseData(JSON.parse(xhttp.responseText));
     } else if (xhttp.readyState == 4 && xhttp.status == 404) {
       // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
