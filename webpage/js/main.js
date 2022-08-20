@@ -88,17 +88,38 @@ const styleFunction = function (feature) {
     return styles[feature.getGeometry().getType()];
 };
 
-function addKMLlayer(url) {
+function updateLayers() {
+    // Check which layers to show
+    var showRoads = document.getElementById("roads-en").checked;
+    var showFlood = document.getElementById("flooding-en").checked;
+    var showFire = document.getElementById("fire-en").checked;
+
+    var layers = mapMain.getAllLayers();
+    for (var i = 0; i < layers.length; i++) {
+        if (layers[i].get("name") == "roads") {
+            layers[i].setVisible(showRoads);
+        }
+        if (layers[i].get("name") == "flood") {
+            layers[i].setVisible(showFlood);
+        } 
+        if (layers[i].get("name") == "fire") {
+            layers[i].setVisible(showFire);
+        }
+    }
+}
+
+function addKMLlayer(url, layerName = "KML-Layer") {
     const dataSource = new VectorLayer({
         source: new VectorSource({
             url: url,
             format: new KML(),
         }),
     });
+    dataSource.set("name", layerName);
     mapMain.addLayer(dataSource);
 }
 
-function addGeoJSONlayer(url) {
+function addGeoJSONlayer(url, layerName = "GeoJSON-Layer") {
     // Fetch the GeoJSON data from the server
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -123,6 +144,7 @@ function addGeoJSONlayer(url) {
                 source: vectorSource,
                 style: styleFunction,
             });
+            newGeoJSONLayer.set("name", layerName);
             mapMain.addLayer(newGeoJSONLayer);
         } else if (xhttp.readyState == 4 && xhttp.status == 404) {
             // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
@@ -135,6 +157,13 @@ function addGeoJSONlayer(url) {
 function setup() {
     M.AutoInit();
 
+    setTimeout(mapSetup, 3000);
+    
+    
+    document.getElementById("update-map").addEventListener("pointerup", updateLayers);
+}
+
+function mapSetup() {
     mapMain = new Map({
         target: 'map',
         layers: [
@@ -150,10 +179,22 @@ function setup() {
             constrainOnlyCenter: true
         })
     });
-    // addKMLlayer("data/tmr-traffic-census-2020.kml");
-    addKMLlayer("data/flood-extent.kml");
-    addGeoJSONlayer("/data/roads.geojson");
-    document.getElementById("loader-overlay").style.display = "none";
+    // 
+    addKMLlayer("data/flood-extent.kml", "flood");
+    addGeoJSONlayer("/data/roads.geojson", "roads");
+    /*
+    // This could be useful if the loader overlay were less annoying than it currently is.
+    mapMain.on("loadstart", function() {
+        document.getElementById("loader-overlay").style.display = "initial";
+    });
+    */ 
+    mapMain.on("loadend", function() {
+        document.getElementById("loader-overlay").style.display = "none";
+        var layers = mapMain.getAllLayers();
+        for (var i = 0; i < layers.length; i++) {
+            console.log(layers[i].get("name"));
+        }
+    });
 }
 
 setup();

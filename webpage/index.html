@@ -15,21 +15,27 @@
     <!-- Create sidebar with controls -->
     <ul id="controls" class="sidenav sidenav-fixed">
         <li><h3 class="center">Freight Route Planner</h3></li>
-        <li><h5 class="sidebar-checkbox">Diasasters to consider:</h5></li>
+        <li><h5 class="sidebar-checkbox">Layers:</h5></li>
         <li>
             <label class="sidebar-checkbox">
-                <input type="checkbox" id="flooding-en" class="filled-in">
+                <input type="checkbox" id="roads-en" class="filled-in" checked>
+                <span class="black-text">🚛 Important Roads</span>
+            </label>
+        </li>
+        <li>
+            <label class="sidebar-checkbox">
+                <input type="checkbox" id="flooding-en" class="filled-in" checked>
                 <span class="black-text">🌊 Flooding</span>
             </label>
         </li>
         <li>
             <label class="sidebar-checkbox">
-                <input type="checkbox" id="fire-en" class="filled-in">
+                <input type="checkbox" id="fire-en" class="filled-in" disabled>
                 <span class="black-text">🔥 Fires</span>
             </label>
         </li>
         <li>
-            <li><a class="waves-effect green btn-large"><i class="material-icons right white-text">send</i><b>Apply</b></a></li>
+            <li><a class="waves-effect green btn-large" id="update-map"><i class="material-icons right white-text">send</i><b>Apply</b></a></li>
 
         </li>
     </ul>
@@ -37,14 +43,16 @@
 
     <div id="loader-overlay">
         <div id="loader-cont">
-            <div id="loader-spinner" class="preloader-wrapper big active">
-                <div class="spinner-layer spinner-blue">
+            <div class="preloader-wrapper big active">
+                <div class="spinner-layer spinner-blue-only">
                     <div class="circle-clipper left">
                         <div class="circle"></div>
-                    </div><div class="gap-patch">
+                    </div>
+                    <div class="gap-patch">
                         <div class="circle"></div>
-                    </div><div class="circle-clipper right">
-                    <div class="circle"></div>
+                    </div>
+                    <div class="circle-clipper right">
+                        <div class="circle"></div>
                     </div>
                 </div>
             </div>
