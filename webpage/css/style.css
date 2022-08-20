@@ -5,7 +5,11 @@
 }
 
 h3 {
-  border-bottom: 3px solid black;
+  font-size: 30px;
+}
+
+.title {
+  font-size: 40px;
 }
 
 
