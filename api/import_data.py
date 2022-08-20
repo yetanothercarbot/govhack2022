@@ -8,6 +8,7 @@ the data being used is:
 - QLD flood and fire maps
 '''
 import json
+import aiofiles
 import asyncio
 import asyncpg
 import aiohttp
@@ -27,11 +28,11 @@ DATA_TRAFFIC_CENSUS = [
 
 CREATE_ROAD_CENSUS_TABLE = """
 CREATE TABLE IF NOT EXISTS CensusLocations (
-    ID INTEGER PRIMARY KEY, -- Record ID
+    ID SERIAL PRIMARY KEY, -- Record ID
     SiteID INTEGER NOT NULL,
     Year SMALLINT NOT NULL,
     Location POINT NOT NULL,
-    AADT INTEGER NOT NULL,
+    AADT REAL NOT NULL,
     PcntHV NUMERIC(5, 2)
 );
 """
@@ -41,18 +42,18 @@ CREATE TABLE IF NOT EXISTS Roads (
     ID INTEGER, -- OSM ID number
     ID_TYPE VARCHAR(10), -- OSM ID category
     HighwayType INTEGER NOT NULL,
-    RouteRef INTEGER,
+    RouteRef VARCHAR(255),
     Route POLYGON NOT NULL,
     PRIMARY KEY (ID, ID_TYPE)
 );
 """
 
 HIGHWAY_TYPES = {
-    0: "Motorway",
-    1: "Trunk",
-    2: "Primary",
-    3: "Secondary",
-    4: "Tertiary"
+    "motorway": 0,
+    "trunk": 1,
+    "primary": 2,
+    "secondary": 3,
+    "tertiary": 4
 }
 
 '''
@@ -80,11 +81,11 @@ async def import_road_census_data(db):
     insert_row = """
         INSERT INTO CensusLocations
         (
-            SiteID INTEGER NOT NULL,
-            Year SMALLINT NOT NULL,
-            Location POINT NOT NULL,
-            AADT INTEGER NOT NULL,
-            PcntHV NUMERIC(5, 2)
+            SiteID,
+            Year,
+            Location,
+            AADT,
+            PcntHV
         )
         VALUES
         (
@@ -104,11 +105,11 @@ async def import_road_census_data(db):
             async for data in read_csv_by_line(url):
                 try:
                     args = [
-                        data['SITE'],
+                        int(data['SITE']),
                         2020,
-                        f"POINT({data['LONGITUDE']} {data['LATITUDE']})",
-                        data['AADT'],
-                        data['PC_CLASS_0B'],
+                        (float(data['LONGITUDE']), float(data['LATITUDE'])),
+                        float(data['AADT']),
+                        len(data['PC_CLASS_0B']) > 0 and float(data['PC_CLASS_0B']) or None,
                     ]
 
                     queue.append(args)
@@ -116,12 +117,15 @@ async def import_road_census_data(db):
                     if len(queue) >= 100:
                         await stmt.executemany(queue)
                         queue = []
-                except:
-                    print(f"Insert failed")
 
-                sys.stdout.write("\r Processing record: %i" % num)
-                sys.stdout.flush()
-                num += 1
+                    sys.stdout.write("\r Processing record: %i" % num)
+                    sys.stdout.flush()
+                    num += 1
+                except ValueError:
+                    pass
+                except Exception as e:
+                    print(data)
+                    raise e
 
     print(f"Inserted all census data")
 
@@ -132,11 +136,11 @@ async def import_roads(db):
     insert_row = """
         INSERT INTO Roads
         (
-            ID INTEGER, -- OSM ID number
-            ID_TYPE VARCHAR(10), -- OSM ID category
-            HighwayType INTEGER NOT NULL,
-            RouteRef INTEGER,
-            Route POLYGON NOT NULL
+            ID, -- OSM ID number
+            ID_TYPE, -- OSM ID category
+            HighwayType,
+            RouteRef,
+            Route
         )
         VALUES
         (
@@ -152,19 +156,20 @@ async def import_roads(db):
     queue = []
     num = 1
     async with db.transaction():
-        async with session.get(settings['osm_data_location']) as r:
-            geojson = await r.json()
+        async with aiohttp.ClientSession(raise_for_status=True) as session:
+            async with aiofiles.open(settings['osm_data_location'], mode='r', encoding="utf8") as f:
+                geojson = json.loads(await f.read())
 
-            for feature in geojson['features']:
-                if 'highway' in feature['properties']:
-                    polygon = ",".join([f"({x[0]}, {x[1]})" for x in feature['geometry']['coordinates']])
-                    try:
+                for feature in geojson['features']:
+                    if 'highway' in feature['properties']:
+                        polygon = [(x[0], x[1]) for x in feature['geometry']['coordinates']]
+
                         args = [
-                            feature['id'].split('')[1],
-                            feature['id'].split('')[0],
-                            feature['properties']['highway'],
-                            int(feature['properties']['ref']),
-                            f"POLYGON({polygon})",
+                            int(feature['id'].split('/')[1]),
+                            feature['id'].split('/')[0],
+                            HIGHWAY_TYPES[feature['properties']['highway'].lower()],
+                            'ref' in feature['properties'] and feature['properties']['ref'] or None,
+                            tuple(polygon),
                         ]
 
                         queue.append(args)
@@ -172,12 +177,10 @@ async def import_roads(db):
                         if len(queue) >= 100:
                             await stmt.executemany(queue)
                             queue = []
-                    except:
-                        print(f"Insert failed")
 
-                    sys.stdout.write("\r Processing record: %i" % num)
-                    sys.stdout.flush()
-                    num += 1
+                        sys.stdout.write("\r Processing record: %i" % num)
+                        sys.stdout.flush()
+                        num += 1
 
     print(f"Inserted all road data")
 
@@ -185,8 +188,8 @@ async def run():
     db = await asyncpg.connect(user=settings['psql_user'], password=settings['psql_pass'],
         database=settings['psql_dbname'], host=settings['psql_host'])
 
-    await db.execute(CREATE_CRASH_LOCATIONS_TABLE)
     await db.execute(CREATE_ROAD_CENSUS_TABLE)
+    await db.execute(CREATE_ROAD_GEO_TABLE)
 
     await import_road_census_data(db)
     await import_roads(db)
