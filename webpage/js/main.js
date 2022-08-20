@@ -8,7 +8,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Circle from 'ol/geom/Circle';
 import Feature from 'ol/Feature';
 import OSM from 'ol/source/OSM';
-import { fromLonLat } from 'ol/proj';
+import * as olProj from 'ol/proj';
 
 
 var mapMain;
@@ -119,24 +119,29 @@ function addKMLlayer(url, layerName = "KML-Layer") {
     mapMain.addLayer(dataSource);
 }
 
-function addGeoJSONlayer(url, layerName = "GeoJSON-Layer") {
+function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = "EPSG:3857") {
     // Fetch the GeoJSON data from the server
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (xhttp.readyState == 4 && xhttp.status == 200) {
             var data = JSON.parse(xhttp.responseText);
-            // Convert the projection in the GeoJSON file
-            var n = 0;
-            for (var i = 0; i < data.features.length; i++) {
-                for (var j = 0; j < data.features[i].geometry.coordinates.length; j++) {
-                    data.features[i].geometry.coordinates[j] = fromLonLat(data.features[i].geometry.coordinates[j]);
-                    n++;
+            // Convert the projection in the GeoJSON file if needed
+            if (sourceProjection == "lonlat") { // TODO: Replace with proper projection method definition.
+                var n = 0;
+                for (var i = 0; i < data.features.length; i++) {
+                    for (var j = 0; j < data.features[i].geometry.coordinates.length; j++) {
+                        data.features[i].geometry.coordinates[j] = olProj.fromLonLat(data.features[i].geometry.coordinates[j]);
+                        n++;
+                    }
                 }
+                sourceProjection = "EPSG:3857"
+                console.log(n);
             }
-            console.log(n);
 
             var vectorSource = new VectorSource({
-                features: new GeoJSON().readFeatures(data),
+                features: new GeoJSON().readFeatures(data, {
+                    dataProjection: sourceProjection,
+                }),
             });
 
 
@@ -181,7 +186,8 @@ function mapSetup() {
     });
     // 
     addKMLlayer("data/flood-extent.kml", "flood");
-    addGeoJSONlayer("/data/roads.geojson", "roads");
+    addGeoJSONlayer("/data/roads.geojson", "roads", "lonlat"); 
+    addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "ESPG:9822"); // ESPG:9822
     /*
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
