@@ -287,7 +287,8 @@ function mapSetup() {
         })
     });
     addKMLlayer("data/flood-extent.kml", "flood");
-    addGeoJSONlayer("/data/roads.geojson", "roads", "EPSG:4326");
+    //addGeoJSONlayer("/data/roads.geojson", "roads", "EPSG:4326");
+    loadroads()
     // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
     addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577", fireStyleFunction);
     /*
@@ -302,23 +303,23 @@ function mapSetup() {
     });
 }
 
-function loadRoads() {
-    // START OF EXTREMELY BAD TEMP CODE
-    mapMain.events.register("moveend", map, function() {
-        loadRoads();
-    });
-    mapMain.events.register("zoomend", map, function() {
-        loadRoads();
-    });
+function loadroads() {
+    console.log("load roads");
+    setTimeout(function() {
+        mapMain.once('moveend', function() {
+            loadroads();
+        })
+    }, 500);
 
     mapMain.getLayers().getArray()
       .filter(layer => layer.get('name') === "roads")
       .forEach(layer => mapMain.removeLayer(layer));
 
-    requestBody = {};
-    boundingBox = mapMain.getView().calculateExtent(mapMain.getSize());
-    requestBody.corner1 = ol.proj.toLonLat(boundingBox.slice(0,2));
-    requestBody.corner2 = ol.proj.toLonLat(boundingBox.slice(2,4))
+    var requestBody = {};
+    var boundingBox = mapMain.getView().calculateExtent(mapMain.getSize());
+    requestBody.corner1 = olProj.toLonLat(boundingBox.slice(0,2));
+    requestBody.corner2 = olProj.toLonLat(boundingBox.slice(2,4));
+    console.log(requestBody)
 
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
@@ -326,7 +327,7 @@ function loadRoads() {
             var data = JSON.parse(xhttp.responseText);
             var vectorSource = new VectorSource({
                 features: new GeoJSON().readFeatures(data, {
-                    dataProjection: sourceProjection,
+                    dataProjection: "EPSG:4326",
                     featureProjection: defaultProj
                 }),
             });
@@ -345,8 +346,6 @@ function loadRoads() {
     }
     xhttp.open("POST", "http://localhost:9999/list_roads", true);
     xhttp.send(JSON.stringify(requestBody));
-
-    // END OF EXTREMELY BAD TEMP CODE
 }
 
 setup();
