@@ -8,4 +8,4 @@ Our road network is integral to Australia's supply corridors, and as such must h
 
 We had larger plans that we were not able to realise within the 46 hours of this competition. The largest feature missing is allowing the user to enter and store routes - with this information, the software would be able to show which sections of routes are most at-risk and give alternative routing information. In fact, using data from the Bureau of Meteorology, we could predict what routes are most likely to close. These sources of data, including information about the load, could be used to effectively triage routes. 
 
-As always, more information, such as future expansions and implementation details, is available on our repository. Thank you for your time.
+As always, more information, such as future expansions and implementation details, is available on our repository. You can have a play with our prototype by opening freightrelocate.xyz. Thank you for your time.
