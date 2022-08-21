@@ -15,3 +15,10 @@ We had to narrow the scope for the proof of concept, due to the limited time and
 - Use data from the Bureau of Meteorology to show routes which could potentially be affected within the next 24 hours.
 - Use data from emergency services and local councils to show which routes are being affected *right now*. 
 - Based on the three previous dot points, it can prioritise routes that need to be reviewed based on urgency, risk and importance.
+
+## Data Used
+- [2020 traffic census data](https://www.data.qld.gov.au/dataset/traffic-census-for-the-queensland-state-declared-road-network/resource/1f52e522-7cb8-451c-b4c2-8467a087e883)
+- [Flood Extent Series](https://www.data.qld.gov.au/dataset/flood-extent-series)
+- [Bushfire Prone Area](https://www.data.qld.gov.au/dataset/bushfire-prone-area-queensland-series)
+- [Harmonised National Roadworks](https://data.datahub.freightaustralia.gov.au/dataset/harmonised-national-roadworks)
+- [Heavy Vehicle Rest Areas](https://data.datahub.freightaustralia.gov.au/dataset/heavy-vehicle-rest-areas)
