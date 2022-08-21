@@ -301,11 +301,12 @@ function mapSetup() {
             constrainOnlyCenter: true
         })
     });
-    addGeoJSONlayer("/data/flood.geojson", "flood", floodStyleFunction);
+    addGeoJSONlayer("/data/flood-simplified.geojson", "flood", floodStyleFunction);
     loadroads()
     // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
-    // Converted to EPSG:3857
-    addGeoJSONlayer("/data/fire/DarlingDownsRegion.geojson", "fire", fireStyleFunction);
+    // Converted to EPSG:4326
+    addGeoJSONlayer("/data/fire/DarlingDownsRegion.geojson", "fire");
+    addGeoJSONlayer("/data/fire/CentralQueenslandRegion.geojson", "fire");
 
     addGeoJSONlayer("/data/rest_stops.json", "rest_stops");
 
@@ -321,7 +322,6 @@ function mapSetup() {
 }
 
 function loadroads() {
-    console.log("load roads");
     setTimeout(function() {
         mapMain.once('moveend', function() {
             loadroads();
@@ -336,7 +336,6 @@ function loadroads() {
     var boundingBox = mapMain.getView().calculateExtent(mapMain.getSize());
     requestBody.corner1 = olProj.toLonLat(boundingBox.slice(0,2));
     requestBody.corner2 = olProj.toLonLat(boundingBox.slice(2,4));
-    console.log(requestBody)
 
     addGeoJSONlayer("http://api.freightrelocate.xyz/list_roads", "roads", styleFunction, JSON.stringify(requestBody))
 }
