@@ -81,6 +81,27 @@ const fireStyle = {
     }),
 };
 
+const floodStyle = {
+    'MultiPolygon': new Style({
+        stroke: new Stroke({
+            color: 'blue',
+            width: 1,
+        }),
+        fill: new Fill({
+            color: 'rgba(0, 0, 255, 0.7)',
+        }),
+    }),
+    'Polygon': new Style({
+        stroke: new Stroke({
+            color: 'blue',
+            width: 3,
+        }),
+        fill: new Fill({
+            color: 'rgba(0, 0, 255, 0.7)',
+        }),
+    })
+};
+
 const styles = {
     'Point': new Style({
         image: image,
@@ -150,6 +171,10 @@ const styleFunction = function (feature) {
     return styles[feature.getGeometry().getType()];
 };
 
+const floodStyleFunction = function (feature) {
+    return floodStyle[feature.getGeometry().getType()];
+};
+
 const fireStyleFunction = function (feature) {
     return fireStyle[feature.getGeometry().getType()];
 };
@@ -185,7 +210,7 @@ function addKMLlayer(url, layerName = "KML-Layer") {
     mapMain.addLayer(dataSource);
 }
 
-function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = defaultProj, styling = styleFunction) {
+function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", styling = styleFunction) {
 
     // Fetch the GeoJSON data from the server
     var xhttp = new XMLHttpRequest();
@@ -286,6 +311,7 @@ function mapSetup() {
             constrainOnlyCenter: true
         })
     });
+<<<<<<< HEAD
     addKMLlayer("data/flood-extent.kml", "flood");
     //addGeoJSONlayer("/data/roads.geojson", "roads", "EPSG:4326");
     loadroads();
@@ -293,6 +319,14 @@ function mapSetup() {
     addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577", fireStyleFunction);
 
     addGeoJSONlayer("/data/rest_stops.json", "rest_stops");
+=======
+    // addKMLlayer("data/flood-extent.kml", "flood");
+    addGeoJSONlayer("/data/flood.geojson", "flood", floodStyleFunction);
+    addGeoJSONlayer("/data/roads.geojson", "roads");
+    // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
+    // Converted to EPSG:3857
+    addGeoJSONlayer("/data/fire/WideBayBurnettRegion.geojson", "fire", fireStyleFunction);
+>>>>>>> a766d32 (Styling for flood maps, better GeoJSON rendering)
     /*
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
