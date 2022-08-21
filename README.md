@@ -8,6 +8,7 @@ The project consists of a map, with various layers such as historical flood data
 We had to narrow the scope for the proof of concept, due to the limited time and manpower (team of 2).
 - For the proof of concept, only Queensland data was used, for ease of development. In a real product, the entirety of Australia would naturally be considered.
 - Pandemic complications are not considered, since only one state is being considered. Unlike some other states, Queensland has not split the state into multiple sections with border controls between the sections, which also makes this unnecessary. Whilst the national plan also includes provisions for localised lockdowns for quashing outbreaks, this is not something which appears to be done anywhere in Australia and thus does not need to be considered at this stage. 
+- Bushfire visualisation was partially working previously, but we ran out of time to fix it after moving to a faster rendering method. These datasets are also too large to upload to GitHub. Yellow areas in this screenshot from an earlier prototype show the south-east Queensland areas particularly at risk: ![A map of Queensland with the SEQ region coloured blue and yellow.](readme_img/bushfire.png)
 
 ## Future Improvements
 - Allow users to enter (and store) routes. This tool could then show which sections of the route are most at-risk and how long detours would take. 
