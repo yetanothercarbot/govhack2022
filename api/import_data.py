@@ -31,7 +31,7 @@ DATA_TRAFFIC_CENSUS = [
     "https://www.data.qld.gov.au/dataset/5d74e022-a302-4f40-a594-f1840c92f671/resource/1f52e522-7cb8-451c-b4c2-8467a087e883/download/trafficcensus2020.csv",
 ]
 
-DATA_REST_STOPS = ""
+DATA_REST_STOPS = "https://data.datahub.freightaustralia.gov.au/datastore/dump/db473486-16df-4a97-a6ce-c6382ab60771"
 
 CREATE_ROAD_CENSUS_TABLE = """
 CREATE TABLE IF NOT EXISTS CensusLocations (

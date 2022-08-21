@@ -35,7 +35,7 @@ const replacer = function (key, value) {
     if (!value || !value.geometry) {
       return value;
     }
-  
+
     let type;
     const rawType = value.type;
     let geometry = value.geometry;
@@ -58,7 +58,7 @@ const replacer = function (key, value) {
         geometry = [geometry];
       }
     }
-  
+
     return {
       'type': 'Feature',
       'geometry': {
@@ -288,9 +288,11 @@ function mapSetup() {
     });
     addKMLlayer("data/flood-extent.kml", "flood");
     //addGeoJSONlayer("/data/roads.geojson", "roads", "EPSG:4326");
-    loadroads()
+    loadroads();
     // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
     addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577", fireStyleFunction);
+
+    addGeoJSONlayer("/data/rest_stops.json", "rest_stops");
     /*
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
