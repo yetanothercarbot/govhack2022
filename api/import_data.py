@@ -15,6 +15,11 @@ import aiohttp
 import datetime
 import sys
 
+import shapely.geometry
+import shapely.wkb
+from shapely.geometry.base import BaseGeometry
+from shapely.geometry import Point, LineString
+
 settings = {}
 
 # Read SQL Auth data
@@ -26,12 +31,14 @@ DATA_TRAFFIC_CENSUS = [
     "https://www.data.qld.gov.au/dataset/5d74e022-a302-4f40-a594-f1840c92f671/resource/1f52e522-7cb8-451c-b4c2-8467a087e883/download/trafficcensus2020.csv",
 ]
 
+DATA_REST_STOPS = ""
+
 CREATE_ROAD_CENSUS_TABLE = """
 CREATE TABLE IF NOT EXISTS CensusLocations (
     ID SERIAL PRIMARY KEY, -- Record ID
     SiteID INTEGER NOT NULL,
     Year SMALLINT NOT NULL,
-    Location POINT NOT NULL,
+    Location GEOMETRY NOT NULL,
     AADT REAL NOT NULL,
     PcntHV NUMERIC(5, 2)
 );
@@ -43,7 +50,7 @@ CREATE TABLE IF NOT EXISTS Roads (
     ID_TYPE VARCHAR(10), -- OSM ID category
     HighwayType INTEGER NOT NULL,
     RouteRef VARCHAR(255),
-    Route POLYGON NOT NULL,
+    Route GEOMETRY NOT NULL,
     PRIMARY KEY (ID, ID_TYPE)
 );
 """
@@ -107,7 +114,7 @@ async def import_road_census_data(db):
                     args = [
                         int(data['SITE']),
                         2020,
-                        (float(data['LONGITUDE']), float(data['LATITUDE'])),
+                        Point(float(data['LONGITUDE']), float(data['LATITUDE'])).wkt,
                         float(data['AADT']),
                         len(data['PC_CLASS_0B']) > 0 and float(data['PC_CLASS_0B']) or None,
                     ]
@@ -162,14 +169,14 @@ async def import_roads(db):
 
                 for feature in geojson['features']:
                     if 'highway' in feature['properties']:
-                        polygon = [(x[0], x[1]) for x in feature['geometry']['coordinates']]
+                        polygon = [Point(x[0], x[1]) for x in feature['geometry']['coordinates']]
 
                         args = [
                             int(feature['id'].split('/')[1]),
                             feature['id'].split('/')[0],
                             HIGHWAY_TYPES[feature['properties']['highway'].lower()],
                             'ref' in feature['properties'] and feature['properties']['ref'] or None,
-                            tuple(polygon),
+                            LineString(polygon).wkt,
                         ]
 
                         queue.append(args)
@@ -185,14 +192,33 @@ async def import_roads(db):
     print(f"Inserted all road data")
 
 async def run():
-    db = await asyncpg.connect(user=settings['psql_user'], password=settings['psql_pass'],
-        database=settings['psql_dbname'], host=settings['psql_host'])
+    async def init_connection(conn):
+        def encode_geometry(geometry):
+            if not hasattr(geometry, '__geo_interface__'):
+                raise TypeError('{g} does not conform to '
+                                'the geo interface'.format(g=geometry))
+            shape = shapely.geometry.asShape(geometry)
+            return shapely.wkb.dumps(shape)
 
-    await db.execute(CREATE_ROAD_CENSUS_TABLE)
-    await db.execute(CREATE_ROAD_GEO_TABLE)
+        def decode_geometry(wkb):
+            return shapely.wkb.loads(wkb)
 
-    await import_road_census_data(db)
-    await import_roads(db)
+        await conn.set_type_codec(
+            'geography',
+            encoder=encode_geometry,
+            decoder=decode_geometry,
+            format='binary',
+        )
+
+    pool = await asyncpg.create_pool(user=settings['psql_user'], password=settings['psql_pass'],
+        database=settings['psql_dbname'], host=settings['psql_host'], init=init_connection)
+
+    async with pool.acquire() as db:
+        await db.execute(CREATE_ROAD_CENSUS_TABLE)
+        await db.execute(CREATE_ROAD_GEO_TABLE)
+
+        await import_road_census_data(db)
+        await import_roads(db)
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(run())
