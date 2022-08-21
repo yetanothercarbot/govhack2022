@@ -262,22 +262,6 @@ function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", styling = styleFuncti
             layer.setSource(vectorSource);
             layer.set("name", layerName);
             mapMain.addLayer(layer);
-
-            /*
-            var vectorSource = new VectorSource({
-                features: new GeoJSON().readFeatures(data, {
-                    dataProjection: sourceProjection,
-                    featureProjection: defaultProj
-                }),
-            });
-
-            var newGeoJSONLayer = new VectorLayer({
-                source: vectorSource,
-                style: styling,
-            });
-            newGeoJSONLayer.set("name", layerName);
-            mapMain.addLayer(newGeoJSONLayer);
-            */
         } else if (xhttp.readyState == 4 && xhttp.status == 404) {
             console.error("Received 404 whilst trying to fetch GeoJSON!");
             // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
@@ -325,12 +309,11 @@ function mapSetup() {
 
     addGeoJSONlayer("/data/rest_stops.json", "rest_stops");
 
-    /*
+    
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
         document.getElementById("loader-overlay").style.display = "initial";
     });
-    // */
     mapMain.on("loadend", function() {
         document.getElementById("loader-overlay").style.display = "none";
         updateLayers();
