@@ -15,7 +15,7 @@ We had to narrow the scope for the proof of concept, due to the limited time and
 - Show auxillary information - routing should take rest stop locations into account, for instance, and the estimated cost for each detour. For in-progress routes, the vehicle's current locations could be super-imposed.
 - Use data from the Bureau of Meteorology to show routes which could potentially be affected within the next 24 hours.
 - Use data from emergency services and local councils to show which routes are being affected *right now*. 
-- Based on the three previous dot points, it can prioritise routes that need to be reviewed based on urgency, risk and importance.
+- Based on the three previous dot points and data about the cargo, it can prioritise routes that need to be reviewed based on urgency, risk and importance.
 
 ## Data Used
 - [2020 traffic census data](https://www.data.qld.gov.au/dataset/traffic-census-for-the-queensland-state-declared-road-network/resource/1f52e522-7cb8-451c-b4c2-8467a087e883)
