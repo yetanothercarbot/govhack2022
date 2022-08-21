@@ -210,7 +210,7 @@ function addKMLlayer(url, layerName = "KML-Layer") {
     mapMain.addLayer(dataSource);
 }
 
-function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", styling = styleFunction) {
+function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", styling = styleFunction, post_data = null) {
 
     // Fetch the GeoJSON data from the server
     var xhttp = new XMLHttpRequest();
@@ -283,8 +283,14 @@ function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", styling = styleFuncti
             // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
         }
     }
-    xhttp.open("GET", url);
-    xhttp.send();
+
+    if (post_data) {
+        xhttp.open("POST", url);
+        xhttp.send(post_data);
+    } else {
+        xhttp.open("GET", url);
+        xhttp.send();
+    }
 }
 
 function setup() {
@@ -349,31 +355,7 @@ function loadroads() {
     requestBody.corner2 = olProj.toLonLat(boundingBox.slice(2,4));
     console.log(requestBody)
 
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (xhttp.readyState == 4 && xhttp.status == 200) {
-            var data = JSON.parse(xhttp.responseText);
-            var vectorSource = new VectorSource({
-                features: new GeoJSON().readFeatures(data, {
-                    dataProjection: "EPSG:4326",
-                    featureProjection: defaultProj
-                }),
-            });
-
-            var newGeoJSONLayer = new VectorLayer({
-                source: vectorSource,
-                style: styleFunction,
-            });
-            newGeoJSONLayer.set("name", "roads");
-            mapMain.addLayer(newGeoJSONLayer);
-        } else if (xhttp.readyState == 4 && xhttp.status == 404) {
-            console.error("Received 404 whilst trying to fetch roads!");
-            document.getElementById("roads-en").disabled = true;
-            // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
-        }
-    }
-    xhttp.open("POST", "http://localhost:9999/list_roads", true);
-    xhttp.send(JSON.stringify(requestBody));
+    addGeoJSONlayer("http://api.freightrelocate.xyz/list_roads", "roads", styleFunction, JSON.stringify(requestBody))
 }
 
 setup();
