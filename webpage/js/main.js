@@ -184,6 +184,7 @@ function updateLayers() {
     var showRoads = document.getElementById("roads-en").checked;
     var showFlood = document.getElementById("flooding-en").checked;
     var showFire = document.getElementById("fire-en").checked;
+    var showRestStops = document.getElementById("rest_stops-en").checked;
 
     var layers = mapMain.getAllLayers();
     for (var i = 0; i < layers.length; i++) {
@@ -195,6 +196,9 @@ function updateLayers() {
         }
         if (layers[i].get("name") == "fire") {
             layers[i].setVisible(showFire);
+        }
+        if (layers[i].get("name") == "rest_stops") {
+            layers[i].setVisible(showRestStops);
         }
     }
 }
@@ -310,7 +314,7 @@ function mapSetup() {
 
     addGeoJSONlayer("/data/rest_stops.json", "rest_stops");
 
-    
+
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
         document.getElementById("loader-overlay").style.display = "initial";
@@ -337,7 +341,7 @@ function loadroads() {
     requestBody.corner1 = olProj.toLonLat(boundingBox.slice(0,2));
     requestBody.corner2 = olProj.toLonLat(boundingBox.slice(2,4));
 
-    addGeoJSONlayer("http://api.freightrelocate.xyz/list_roads", "roads", styleFunction, JSON.stringify(requestBody))
+    addGeoJSONlayer("https://api.freightrelocate.xyz/list_roads", "roads", styleFunction, JSON.stringify(requestBody))
 }
 
 setup();
