@@ -24,9 +24,9 @@ proj4.defs("EPSG:9822","+proj=lcc +lat_0=42 +lon_0=3 +lat_1=41.25 +lat_2=42.75 +
 register(proj4);
 
 const image = new CircleStyle({
-    radius: 5,
-    fill: null,
-    stroke: new Stroke({ color: 'red', width: 1 }),
+    radius: 3,
+    fill: new Fill ({color:'rgba(0, 127, 0, 0.7)' }), //,
+    stroke: null // new Stroke({ color: 'green', width: 1 }),
 });
 
 // Converts geojson-vt data to GeoJSON
@@ -315,7 +315,7 @@ function mapSetup() {
     loadroads()
     // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
     // Converted to EPSG:3857
-    addGeoJSONlayer("/data/fire/WideBayBurnettRegion.geojson", "fire", fireStyleFunction);
+    addGeoJSONlayer("/data/fire/DarlingDownsRegion.geojson", "fire", fireStyleFunction);
 
     addGeoJSONlayer("/data/rest_stops.json", "rest_stops");
 
