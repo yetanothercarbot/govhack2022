@@ -1,8 +1,16 @@
 # FreightRelocate by Milk Is Optional
 ## GovHack 2022 Submission
-This is a GovHack 2022 submission, primarily targetted at the [flood, fire and the future: the road to resilience](https://2022.hackerspace.govhack.org/challenges/flood_fire_and_the_future_the_road_to_resilience) challenge. We created a data visualisation tool, with the idea that future expansions would make this an indispensable tool for freight companies. 
+![Banner Image](readme_img/banner.png)
+
+*Original image by Christopher High, used under the Unsplash License. [Source](https://unsplash.com/photos/O8dcG8oniJU)*
+
+This is a GovHack 2022 submission, primarily targeted at the [flood, fire and the future: the road to resilience](https://2022.hackerspace.govhack.org/challenges/flood_fire_and_the_future_the_road_to_resilience) challenge. We created a data visualisation tool, with the idea that future expansions would make this an indispensable tool for freight companies. 
 
 The project consists of a map, with various layers such as historical flood data, regions at risk of being affected by bushfires and routes appropriate for heavy vehicles. 
+
+![](readme_img/overview.png)
+
+In this screenshot, green routes are ones commonly used by heavy traffic (as determined by the traffic census data), blue areas have been flooded in the past and green dots represent rest stops. 
 
 ## Proof of Concept Limitations
 We had to narrow the scope for the proof of concept, due to the limited time and manpower (team of 2).
@@ -11,7 +19,7 @@ We had to narrow the scope for the proof of concept, due to the limited time and
 - Bushfire visualisation was partially working previously, but we ran out of time to fix it after moving to a faster rendering method. These datasets are also too large to upload to GitHub. Yellow areas in this screenshot from an earlier prototype show the south-east Queensland areas particularly at risk: ![A map of Queensland with the SEQ region coloured blue and yellow.](readme_img/bushfire.png)
 
 ## Future Improvements
-- Allow users to enter (and store) routes. This tool could then show which sections of the route are most at-risk and how long detours would take. 
+- Allow users to enter (and store) routes. This tool could then show which sections of the route are at most risk and how long detours would take. 
 - Show auxillary information - routing should take rest stop locations into account, for instance, and the estimated cost for each detour. For in-progress routes, the vehicle's current locations could be super-imposed.
 - Use data from the Bureau of Meteorology to show routes which could potentially be affected within the next 24 hours.
 - Use data from emergency services and local councils to show which routes are being affected *right now*. 
