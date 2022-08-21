@@ -311,22 +311,12 @@ function mapSetup() {
             constrainOnlyCenter: true
         })
     });
-<<<<<<< HEAD
-    addKMLlayer("data/flood-extent.kml", "flood");
-    //addGeoJSONlayer("/data/roads.geojson", "roads", "EPSG:4326");
-    loadroads();
-    // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
-    addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577", fireStyleFunction);
-
-    addGeoJSONlayer("/data/rest_stops.json", "rest_stops");
-=======
-    // addKMLlayer("data/flood-extent.kml", "flood");
     addGeoJSONlayer("/data/flood.geojson", "flood", floodStyleFunction);
     addGeoJSONlayer("/data/roads.geojson", "roads");
     // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
     // Converted to EPSG:3857
     addGeoJSONlayer("/data/fire/WideBayBurnettRegion.geojson", "fire", fireStyleFunction);
->>>>>>> a766d32 (Styling for flood maps, better GeoJSON rendering)
+
     /*
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
