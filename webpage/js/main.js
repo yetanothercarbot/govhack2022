@@ -312,7 +312,7 @@ function mapSetup() {
         })
     });
     addGeoJSONlayer("/data/flood.geojson", "flood", floodStyleFunction);
-    addGeoJSONlayer("/data/roads.geojson", "roads");
+    loadroads()
     // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
     // Converted to EPSG:3857
     addGeoJSONlayer("/data/fire/WideBayBurnettRegion.geojson", "fire", fireStyleFunction);
