@@ -317,6 +317,8 @@ function mapSetup() {
     // Converted to EPSG:3857
     addGeoJSONlayer("/data/fire/WideBayBurnettRegion.geojson", "fire", fireStyleFunction);
 
+    addGeoJSONlayer("/data/rest_stops.json", "rest_stops");
+
     /*
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
