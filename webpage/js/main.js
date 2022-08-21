@@ -11,6 +11,10 @@ import OSM from 'ol/source/OSM';
 import proj4 from 'proj4';
 import {register} from 'ol/proj/proj4';
 import * as olProj from 'ol/proj';
+import VectorTileLayer from 'ol/layer/VectorTile';
+import VectorTileSource from 'ol/source/VectorTile';
+import geojsonvt from 'geojson-vt';
+
 
 var mapMain;
 const defaultProj = "EPSG:3857";
@@ -24,6 +28,58 @@ const image = new CircleStyle({
     fill: null,
     stroke: new Stroke({ color: 'red', width: 1 }),
 });
+
+// Converts geojson-vt data to GeoJSON
+// from OpenLayer example code: https://openlayers.org/en/latest/examples/geojson-vt.html
+const replacer = function (key, value) {
+    if (!value || !value.geometry) {
+      return value;
+    }
+  
+    let type;
+    const rawType = value.type;
+    let geometry = value.geometry;
+    if (rawType === 1) {
+      type = 'MultiPoint';
+      if (geometry.length == 1) {
+        type = 'Point';
+        geometry = geometry[0];
+      }
+    } else if (rawType === 2) {
+      type = 'MultiLineString';
+      if (geometry.length == 1) {
+        type = 'LineString';
+        geometry = geometry[0];
+      }
+    } else if (rawType === 3) {
+      type = 'Polygon';
+      if (geometry.length > 1) {
+        type = 'MultiPolygon';
+        geometry = [geometry];
+      }
+    }
+  
+    return {
+      'type': 'Feature',
+      'geometry': {
+        'type': type,
+        'coordinates': geometry,
+      },
+      'properties': value.tags,
+    };
+  };
+
+const fireStyle = {
+    'MultiPolygon': new Style({
+        stroke: new Stroke({
+            color: 'red',
+            width: 1,
+        }),
+        fill: new Fill({
+            color: 'rgba(255, 0, 0, 0.1)',
+        }),
+    }),
+};
 
 const styles = {
     'Point': new Style({
@@ -46,7 +102,7 @@ const styles = {
     }),
     'MultiPolygon': new Style({
         stroke: new Stroke({
-            color: 'yellow',
+            color: 'red',
             width: 1,
         }),
         fill: new Fill({
@@ -94,6 +150,10 @@ const styleFunction = function (feature) {
     return styles[feature.getGeometry().getType()];
 };
 
+const fireStyleFunction = function (feature) {
+    return fireStyle[feature.getGeometry().getType()];
+};
+
 function updateLayers() {
     // Check which layers to show
     var showRoads = document.getElementById("roads-en").checked;
@@ -125,12 +185,60 @@ function addKMLlayer(url, layerName = "KML-Layer") {
     mapMain.addLayer(dataSource);
 }
 
-function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = defaultProj) {
+function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = defaultProj, styling = styleFunction) {
+
     // Fetch the GeoJSON data from the server
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
         if (xhttp.readyState == 4 && xhttp.status == 200) {
-            var data = JSON.parse(xhttp.responseText);
+            var json = JSON.parse(xhttp.responseText);
+            var layer = new VectorTileLayer({
+                background: 'rgba(0,0,0,0)',
+                style: styling,
+            });
+            var tileIndex = geojsonvt(json, {
+                extent: 4096,
+                debug: 1,
+            });
+            var format = new GeoJSON({
+                // Data returned from geojson-vt is in tile pixel units
+                dataProjection: new olProj.Projection({
+                    code: 'TILE_PIXELS',
+                    units: 'tile-pixels',
+                    extent: [0, 0, 4096, 4096],
+                }),
+            });
+            var vectorSource = new VectorTileSource({
+                tileUrlFunction: function (tileCoord) {
+                    // Use the tile coordinate as a pseudo URL for caching purposes
+                    return JSON.stringify(tileCoord);
+                },
+                tileLoadFunction: function (tile, url) {
+                    var tileCoord = JSON.parse(url);
+                    var data = tileIndex.getTile(
+                        tileCoord[0],
+                        tileCoord[1],
+                        tileCoord[2]
+                    );
+                    var geojson = JSON.stringify(
+                        {
+                            type: 'FeatureCollection',
+                            features: data ? data.features : [],
+                        },
+                        replacer
+                    );
+                    var features = format.readFeatures(geojson, {
+                        extent: vectorSource.getTileGrid().getTileCoordExtent(tileCoord),
+                        featureProjection: defaultProj,
+                    });
+                    tile.setFeatures(features);
+                },
+            });
+            layer.setSource(vectorSource);
+            layer.set("name", layerName);
+            mapMain.addLayer(layer);
+
+            /*
             var vectorSource = new VectorSource({
                 features: new GeoJSON().readFeatures(data, {
                     dataProjection: sourceProjection,
@@ -140,10 +248,11 @@ function addGeoJSONlayer(url, layerName = "GeoJSON-Layer", sourceProjection = de
 
             var newGeoJSONLayer = new VectorLayer({
                 source: vectorSource,
-                style: styleFunction,
+                style: styling,
             });
             newGeoJSONLayer.set("name", layerName);
             mapMain.addLayer(newGeoJSONLayer);
+            */
         } else if (xhttp.readyState == 4 && xhttp.status == 404) {
             console.error("Received 404 whilst trying to fetch GeoJSON!");
             // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
@@ -180,30 +289,26 @@ function mapSetup() {
     addKMLlayer("data/flood-extent.kml", "flood");
     addGeoJSONlayer("/data/roads.geojson", "roads", "EPSG:4326");
     // Mix of EPSG:9822 and EPSG:3577 for some reason, thanks Qld Gov't!
-    //addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577");
-    console.log(olProj.get("EPSG:9822"));
+    addGeoJSONlayer("/data/fire/SouthEastQueenslandRegion.geojson", "fire", "EPSG:3577", fireStyleFunction);
     /*
     // This could be useful if the loader overlay were less annoying than it currently is.
     mapMain.on("loadstart", function() {
         document.getElementById("loader-overlay").style.display = "initial";
     });
-    */
+    // */
     mapMain.on("loadend", function() {
         document.getElementById("loader-overlay").style.display = "none";
-        var layers = mapMain.getAllLayers();
-        for (var i = 0; i < layers.length; i++) {
-            console.log(layers[i].get("name"));
-        }
+        updateLayers();
     });
 }
 
-function loadroads() {
+function loadRoads() {
     // START OF EXTREMELY BAD TEMP CODE
     mapMain.events.register("moveend", map, function() {
-        loadroads();
+        loadRoads();
     });
     mapMain.events.register("zoomend", map, function() {
-        loadroads();
+        loadRoads();
     });
 
     mapMain.getLayers().getArray()
@@ -233,7 +338,8 @@ function loadroads() {
             newGeoJSONLayer.set("name", "roads");
             mapMain.addLayer(newGeoJSONLayer);
         } else if (xhttp.readyState == 4 && xhttp.status == 404) {
-            console.error("Received 404 whilst trying to fetch GeoJSON!");
+            console.error("Received 404 whilst trying to fetch roads!");
+            document.getElementById("roads-en").disabled = true;
             // shaaaaaaaaame shaaaaaaaaaaaaaaaaaaaaaame
         }
     }
